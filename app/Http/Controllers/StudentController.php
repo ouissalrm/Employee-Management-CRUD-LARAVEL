@@ -7,35 +7,61 @@ use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-    //c'est pour afficher
-    public function index(){
-        $students=Student::all();
-        return view('students.index',compact('students'));
+    // Afficher la liste des étudiants
+    public function index()
+    {
+        $students = Student::all();
+        return view('students.index', compact('students'));
     }
-//c'est pour ajouter formulaire
-    public function create(){
+
+    // Afficher le formulaire d'ajout
+    public function create()
+    {
         return view('students.create');
     }
-//pour save
-    public function store(Request $request){
-        Student::create($request->all());
-        return redirect()->route('students.index');
+
+    // Enregistrer un nouvel étudiant
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => 'required|email|unique:students',
+            'age'   => 'nullable|integer'
+        ]);
+
+        Student::create($validated);
+
+        return redirect()->route('students.index')
+                         ->with('success', 'Étudiant ajouté avec succès!');
     }
 
-//pour edit
-public function edit(Student $student){
-    return view('students.edit',compact('student'));
-}
-//update
-public function update(Request $request ,Student $student){
-    $student->update($request->all());
-    return redirect()->route('students.index');
-}
+    // Afficher le formulaire d'édition
+    public function edit(Student $student)
+    {
+        return view('students.edit', compact('student'));
+    }
 
-//delete
-public function destroy(Student $student){
-    $student->delete();
-    return redirect()->route('students.index');
-}
+    // Mettre à jour un étudiant
+    public function update(Request $request, Student $student)
+    {
+        $validated = $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => 'required|email|unique:students,email,' . $student->id,
+            'age'   => 'nullable|integer'
+        ]);
 
+        $student->update($validated);
+
+        return redirect()->route('students.index')
+                         ->with('success', 'Étudiant modifié avec succès!');
+    }
+
+    // Supprimer un étudiant
+    public function destroy(Student $student)
+    {
+        $student->delete();
+
+        return redirect()->route('students.index')
+                         ->with('success', 'Étudiant supprimé avec succès!');
+    }
 }
